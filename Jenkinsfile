@@ -1,43 +1,46 @@
 pipeline {
-  environment {
-    imagename = "gopalgautam/assignment3"
-    registryCredential = 'docker_registry_key_1'
-    dockerImage = ''
-  }
-  agent any
-  tools { //Allows you to define tools or installations needed for your pipeline.
-    nodejs 'node' // 'node' should match the NodeJS installation name configured in Jenkins
-    dockerTool 'docker'
-  }
-  stages {
-    stage('Cloning Git') {
-      steps {
-        git([url: 'https://github.com/Gopal-creater/practice.git', branch: 'main'])
- 
-      }
+    agent any // Specifies that the pipeline can run on any available agent (Jenkins agent or node).
+    tools { //Allows you to define tools or installations needed for your pipeline.
+        nodejs 'node' // 'node' should match the NodeJS installation name configured in Jenkins
+        dockerTool 'docker'
     }
-    stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build(imagename)
+
+    stages { //Defines a series of stages that make up the Jenkins pipeline.
+        stage("checkout") {
+            steps{
+                //Clone the github repo
+                checkout scm //Uses the checkout step to fetch the source code from the configured SCM system (e.g., Git).
+            }
         }
-      }
-    }
-    stage('Deploy Image') {
-      steps{
-        script {
-          docker.withRegistry( '', registryCredential ) {
-            dockerImage.push("$BUILD_NUMBER")
-          }
+
+        stage("build"){
+            steps {
+               // Jenkins will automatically set up the environment for npm commands
+                script {
+                    sh 'npm install'
+                }
+            }
         }
-      }
+
+        stage("build image"){
+            steps {
+                script {
+                    // Build your Docker image
+                    dockerImage = docker.build('gopalgautam/assignment3')
+                }
+            }
+        }
+
+        stage("docker push"){
+            steps {
+                script {
+                    // Log in to Docker Hub
+                    sh "docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}"
+                    
+                    // Push the Docker image to Docker Hub
+                    dockerImage.push()
+                }
+            }
+        }
     }
-    stage('Remove Unused docker image') {
-      steps{
-        sh "docker rmi $imagename:$BUILD_NUMBER"
-         sh "docker rmi $imagename:latest"
- 
-      }
-    }
-  }
 }
