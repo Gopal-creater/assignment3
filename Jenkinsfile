@@ -26,9 +26,11 @@ pipeline {
     stage('Deploy Image') {
       steps{
         script {
-          docker.withRegistry( '', registryCredential ) {
-            dockerImage.push("$BUILD_NUMBER")
-          }
+                    // Log in to Docker Hub
+                    sh "docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}"
+                    
+                    // Push the Docker image to Docker Hub
+                    dockerImage.push()
         }
       }
     }
