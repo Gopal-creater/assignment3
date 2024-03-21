@@ -5,6 +5,10 @@ pipeline {
     dockerImage = ''
   }
   agent any
+  tools { //Allows you to define tools or installations needed for your pipeline.
+    nodejs 'node' // 'node' should match the NodeJS installation name configured in Jenkins
+    dockerTool 'docker'
+  }
   stages {
     stage('Cloning Git') {
       steps {
